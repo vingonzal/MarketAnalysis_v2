@@ -1,14 +1,14 @@
-import requests
-from bs4 import BeautifulSoup
-import csv
-from urllib.parse import urljoin
-import os
+import requests #library for making HTTP requests
+from bs4 import BeautifulSoup #library used for parsing HTML and XML documents
+import csv #module for CSV file handling
+from urllib.parse import urljoin # urljoin function is used to construct an absolute URL
+import os #module to help with OS function: file/directory operations and path manipulation
 
 # ******************************************************************
 # **** Use Python Basics for Market Analysis ** With OOP ***********
 # ******************************************************************
 
-# constant variable
+# constant variable - used for joined URLs
 BASE_URL = 'http://books.toscrape.com/'
 
 # Responsibility: Represents a single book and extracts its data
