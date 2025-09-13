@@ -4,8 +4,14 @@ import csv
 from urllib.parse import urljoin
 import os
 
+# ******************************************************************
+# **** Use Python Basics for Market Analysis ** With OOP ***********
+# ******************************************************************
+
+# constant variable
 BASE_URL = 'http://books.toscrape.com/'
 
+# Responsibility: Represents a single book and extracts its data
 class Book:
     def __init__(self, url):
         self.url = url
@@ -58,7 +64,7 @@ class Book:
     def get_data(self):
         return self.data
 
-
+# Responsibility: Handles scraping of all books within a category
 class CategoryScraper:
     def __init__(self, category_url, category_name):
         self.category_url = category_url
@@ -95,7 +101,7 @@ class CategoryScraper:
                 book = Book(url)
                 writer.writerow(book.get_data())
 
-
+# Responsibility: Orchestrates the entire scraping process across categories
 class BookScraper:
     def __init__(self, homepage_url):
         self.homepage_url = homepage_url
@@ -119,6 +125,6 @@ class BookScraper:
             scraper = CategoryScraper(url, name)
             scraper.scrape_books()
 
-
+# Gatekeeper condition - runs the script if not being imported
 if __name__ == "__main__":
     BookScraper(BASE_URL).run()
