@@ -11,7 +11,7 @@ import os #module to help with OS function: file/directory operations and path m
 # constant variable - used for joined URLs
 BASE_URL = 'http://books.toscrape.com/'
 
-# Responsibility: Represents a single book and extracts its data
+# Responsibility: Represents a single book and extracts its data (handles fetching the page, parsing the data, and saving the image).
 class Book:
     def __init__(self, url):
         self.url = url
@@ -64,7 +64,7 @@ class Book:
     def get_data(self):
         return self.data
 
-# Responsibility: Handles scraping of all books within a category
+# Responsibility: Handles scraping of all books within a category and writes the data to a CSV
 class CategoryScraper:
     def __init__(self, category_url, category_name):
         self.category_url = category_url
@@ -73,19 +73,29 @@ class CategoryScraper:
 
     def _get_book_urls(self):
         urls = []
-        page_url = self.category_url
+        current_url = self.category_url
+
         while True:
-            soup = BeautifulSoup(requests.get(page_url).content, 'html.parser')
+            response = requests.get(current_url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Extract book URLs from the current page
             containers = soup.find_all('div', class_='image_container')
             for container in containers:
                 link = container.find('a')['href'].replace('../../..', 'catalogue')
-                urls.append(urljoin(BASE_URL, link))
+                full_url = urljoin(BASE_URL, link)
+                urls.append(full_url)
 
-            if not soup.find('li', class_='next'):
-                break
-            page_num = len(urls) // 20 + 2
-            page_url = self.category_url.replace('index.html', f'page-{page_num}.html')
+            # Check for the "Next" button
+            next_button = soup.find('li', class_='next')
+            if next_button:
+                next_page = next_button.find('a')['href']
+                current_url = urljoin(current_url, next_page)
+            else:
+                break  # No more pages
+
         return urls
+
 
     def scrape_books(self):
         headers = [
@@ -101,7 +111,7 @@ class CategoryScraper:
                 book = Book(url)
                 writer.writerow(book.get_data())
 
-# Responsibility: Orchestrates the entire scraping process across categories
+# Responsibility: Orchestrates the entire scraping process across categories by triggering the caregory scrapers
 class BookScraper:
     def __init__(self, homepage_url):
         self.homepage_url = homepage_url
@@ -117,7 +127,7 @@ class BookScraper:
             name = link.text.strip()
             full_url = urljoin(BASE_URL, href)
             categories.append((full_url, name))
-        return categories
+        return categories #returns list of tuples (url, category name)
 
     def run(self):
         for url, name in self.categories:
@@ -125,6 +135,6 @@ class BookScraper:
             scraper = CategoryScraper(url, name)
             scraper.scrape_books()
 
-# Gatekeeper condition - runs the script if not being imported
+# Gatekeeper - runs the script only when file is executed directly
 if __name__ == "__main__":
     BookScraper(BASE_URL).run()
